@@ -7,6 +7,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ShareViewController">
             <connections>
+                <outlet property="postButton" destination="1uM-r7-H1c" id="Rxy-9V-Vc2"/>
                 <outlet property="remainingCharactersLabel" destination="qgj-aV-rIw" id="sr7-jd-ksQ"/>
                 <outlet property="textView" destination="zGN-CO-03a" id="c8G-rm-Vp4"/>
                 <outlet property="view" destination="1" id="2"/>

@@ -11,6 +11,7 @@
 @interface ShareViewController ()
 @property (unsafe_unretained) IBOutlet NSTextView *textView;
 @property (weak) IBOutlet NSTextField *remainingCharactersLabel;
+@property (weak) IBOutlet NSButton *postButton;
 
 @end
 
@@ -41,7 +42,13 @@
 
 -(void)textDidChange:(NSNotification *)notification {
     [self.remainingCharactersLabel setStringValue:[NSString stringWithFormat:@"%lu / 2048", self.textView.string.length]];
-    NSLog(@"CHANGE");
+    if (self.textView.string.length > 2048) {
+        self.remainingCharactersLabel.textColor = [NSColor redColor];
+        self.postButton.enabled = NO;
+    } else {
+        self.remainingCharactersLabel.textColor = [NSColor blackColor];
+        self.postButton.enabled = YES;
+    }
 }
 
 - (IBAction)send:(id)sender {
