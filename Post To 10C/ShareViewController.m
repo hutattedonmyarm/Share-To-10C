@@ -40,7 +40,8 @@
 - (IBAction)send:(id)sender {
     NSExtensionItem *outputItem = [[NSExtensionItem alloc] init];
     // Complete implementation by setting the appropriate value on the output item
-    
+    NSLog(@"Sending: %@", self.textView.string);
+    outputItem.attachments = @[[[NSItemProvider alloc] initWithItem: @{NSExtensionItemAttributedContentTextKey: @{@"post":self.textView.string}} typeIdentifier:(NSString *)kUTTypeText]];
     NSArray *outputItems = @[outputItem];
     [self.extensionContext completeRequestReturningItems:outputItems completionHandler:nil];
 }
