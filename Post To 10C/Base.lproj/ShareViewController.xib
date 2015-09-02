@@ -7,6 +7,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ShareViewController">
             <connections>
+                <outlet property="authorizedLabel" destination="Yin-kI-nXt" id="U6w-53-V5z"/>
                 <outlet property="postButton" destination="1uM-r7-H1c" id="Rxy-9V-Vc2"/>
                 <outlet property="remainingCharactersLabel" destination="qgj-aV-rIw" id="sr7-jd-ksQ"/>
                 <outlet property="textView" destination="zGN-CO-03a" id="c8G-rm-Vp4"/>
@@ -49,6 +50,9 @@ Gw
                 </button>
                 <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aNc-0i-CWK">
                     <rect key="frame" x="152" y="229" width="82" height="17"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="78" id="sZj-0c-Is7"/>
+                    </constraints>
                     <animations/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Post to 10C" id="0xp-rC-2gr">
                         <font key="font" metaFont="systemBold"/>
@@ -98,14 +102,26 @@ Gw
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Yin-kI-nXt">
+                    <rect key="frame" x="18" y="229" width="130" height="17"/>
+                    <animations/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="LKr-ds-kEV">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
             </subviews>
             <constraints>
                 <constraint firstItem="1uM-r7-H1c" firstAttribute="leading" secondItem="NVE-vN-dkz" secondAttribute="trailing" constant="8" id="1UO-J1-LbJ"/>
+                <constraint firstItem="aNc-0i-CWK" firstAttribute="leading" secondItem="Yin-kI-nXt" secondAttribute="trailing" constant="8" id="2Kd-HK-TUh"/>
+                <constraint firstItem="Yin-kI-nXt" firstAttribute="centerY" secondItem="aNc-0i-CWK" secondAttribute="centerY" id="2wA-Le-BtQ"/>
                 <constraint firstAttribute="bottom" secondItem="1uM-r7-H1c" secondAttribute="bottom" constant="10" id="4wH-De-nMF"/>
                 <constraint firstItem="qgj-aV-rIw" firstAttribute="leading" secondItem="1" secondAttribute="leading" constant="20" id="6WE-fx-CxN"/>
                 <constraint firstItem="NVE-vN-dkz" firstAttribute="top" secondItem="1oB-dD-wdd" secondAttribute="bottom" constant="8" id="G6Y-WK-J2m"/>
                 <constraint firstItem="1oB-dD-wdd" firstAttribute="leading" secondItem="1" secondAttribute="leading" constant="20" id="Szk-pm-bF1"/>
                 <constraint firstAttribute="bottom" secondItem="NVE-vN-dkz" secondAttribute="bottom" constant="10" id="USG-Gg-of3"/>
+                <constraint firstItem="Yin-kI-nXt" firstAttribute="leading" secondItem="1" secondAttribute="leading" constant="20" id="VGI-xL-1uB"/>
                 <constraint firstAttribute="trailing" secondItem="1oB-dD-wdd" secondAttribute="trailing" constant="20" id="Yfa-hH-seZ"/>
                 <constraint firstItem="1uM-r7-H1c" firstAttribute="leading" secondItem="NVE-vN-dkz" secondAttribute="trailing" constant="8" id="a8N-vS-Ew9"/>
                 <constraint firstItem="1oB-dD-wdd" firstAttribute="top" secondItem="aNc-0i-CWK" secondAttribute="bottom" constant="8" id="ntf-3S-dGB"/>

@@ -12,6 +12,7 @@
 @property (unsafe_unretained) IBOutlet NSTextView *textView;
 @property (weak) IBOutlet NSTextField *remainingCharactersLabel;
 @property (weak) IBOutlet NSButton *postButton;
+@property (weak) IBOutlet NSTextField *authorizedLabel;
 
 @end
 
@@ -21,22 +22,29 @@
     return @"ShareViewController";
 }
 - (void)loadView {
+    //Auth: https://account.app.net/oauth/authenticate?client_id=LzpEruz978ZHrpdRueMeMzDmUd4hEuyK&response_type=token&scope=messages:net.app.core.pm
     [super loadView];
     self.textView.delegate = self;
     // Insert code here to customize the view
-    NSArray *inputItems = self.extensionContext.inputItems;
-    
-    for (NSExtensionItem *item in inputItems) {
-        for (NSItemProvider *att in item.attachments) {
-            if ([att hasItemConformingToTypeIdentifier:@"public.url"]) {
-                [att loadItemForTypeIdentifier:@"public.url" options:nil completionHandler:^(NSURL *item, NSError *error) {
-                    NSURL *url = item;
-                    [self.textView setString:[NSString stringWithFormat:@"[%@](%@)", url.absoluteString, url.absoluteString]];
-                    //Nasty work around
-                    [self textDidChange:nil];
-                }];
-            }
+    NSExtensionItem *item = self.extensionContext.inputItems.firstObject;
+    for (NSItemProvider *att in item.attachments) {
+        if ([att hasItemConformingToTypeIdentifier:@"public.url"]) {
+            [att loadItemForTypeIdentifier:@"public.url" options:nil completionHandler:^(NSURL *item, NSError *error) {
+                NSURL *url = item;
+                [self.textView setString:[NSString stringWithFormat:@"[%@](%@)", url.absoluteString, url.absoluteString]];
+                //Nasty work around
+                [self textDidChange:nil];
+            }];
         }
+    }
+    NSUserDefaults *mySharedDefaults = [[NSUserDefaults alloc] initWithSuiteName: @"group.hutattedonmyarm.posttotenc.app"];
+    NSString *authToken = [mySharedDefaults stringForKey:@"authToken"];
+    if (!authToken) {
+        self.authorizedLabel.stringValue = @"Not authorized";
+        self.authorizedLabel.textColor = [NSColor redColor];
+    } else {
+        self.authorizedLabel.stringValue = @"Authorized";
+        self.authorizedLabel.textColor = [NSColor greenColor];
     }
 }
 

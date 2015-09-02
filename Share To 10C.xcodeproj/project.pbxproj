@@ -81,6 +81,7 @@
 		501881F41B961490004EDD09 /* ShareViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShareViewController.m; sourceTree = "<group>"; };
 		501881F71B961490004EDD09 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/ShareViewController.xib; sourceTree = "<group>"; };
 		501881F91B961490004EDD09 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5094D9101B978D5100639B60 /* Share To 10C.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "Share To 10C.entitlements"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -140,6 +141,7 @@
 		501881B81B960BE4004EDD09 /* Share To 10C */ = {
 			isa = PBXGroup;
 			children = (
+				5094D9101B978D5100639B60 /* Share To 10C.entitlements */,
 				501881B91B960BE4004EDD09 /* AppDelegate.h */,
 				501881BA1B960BE4004EDD09 /* AppDelegate.m */,
 				501881BF1B960BE4004EDD09 /* ViewController.h */,
@@ -285,6 +287,11 @@
 				TargetAttributes = {
 					501881B51B960BE4004EDD09 = {
 						CreatedOnToolsVersion = 7.0;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.Mac = {
+								enabled = 1;
+							};
+						};
 					};
 					501881CB1B960BE5004EDD09 = {
 						CreatedOnToolsVersion = 7.0;
@@ -296,6 +303,11 @@
 					};
 					501881EC1B961490004EDD09 = {
 						CreatedOnToolsVersion = 7.0;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.Mac = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -513,6 +525,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Share To 10C/Share To 10C.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "Share To 10C/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -525,6 +538,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Share To 10C/Share To 10C.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = "Share To 10C/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -632,6 +646,7 @@
 				501881E21B960BE5004EDD09 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		501881E31B960BE5004EDD09 /* Build configuration list for PBXNativeTarget "Share To 10CTests" */ = {
 			isa = XCConfigurationList;
@@ -640,6 +655,7 @@
 				501881E51B960BE5004EDD09 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		501881E61B960BE5004EDD09 /* Build configuration list for PBXNativeTarget "Share To 10CUITests" */ = {
 			isa = XCConfigurationList;
@@ -648,6 +664,7 @@
 				501881E81B960BE5004EDD09 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		501881FD1B961490004EDD09 /* Build configuration list for PBXNativeTarget "Post To 10C" */ = {
 			isa = XCConfigurationList;
@@ -656,6 +673,7 @@
 				501881FF1B961490004EDD09 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
