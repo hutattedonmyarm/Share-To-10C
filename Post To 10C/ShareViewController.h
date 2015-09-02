@@ -8,6 +8,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface ShareViewController : NSViewController
+@interface ShareViewController : NSViewController <NSTextViewDelegate>
 
 @end
