@@ -14,6 +14,8 @@
 @property (weak) IBOutlet NSButton *postButton;
 @property (weak) IBOutlet NSTextField *authorizedLabel;
 
+#define kADN_PM_LIMIT 2048
+
 @end
 
 @implementation ShareViewController
@@ -49,8 +51,8 @@
 }
 
 -(void)textDidChange:(NSNotification *)notification {
-    [self.remainingCharactersLabel setStringValue:[NSString stringWithFormat:@"%lu / 2048", self.textView.string.length]];
-    if (self.textView.string.length > 2048) {
+    [self.remainingCharactersLabel setStringValue:[NSString stringWithFormat:@"%lu / %i", self.textView.string.length, kADN_PM_LIMIT]];
+    if (self.textView.string.length > kADN_PM_LIMIT) {
         self.remainingCharactersLabel.textColor = [NSColor redColor];
         self.postButton.enabled = NO;
     } else {
@@ -62,7 +64,7 @@
 - (IBAction)send:(id)sender {
     
     // Complete implementation by setting the appropriate value on the output item
-    if (self.textView.string.length > 2048) {
+    if (self.textView.string.length > kADN_PM_LIMIT) {
         NSLog(@"Too long");
     } else {
         NSLog(@"Sending: %@", self.textView.string);
