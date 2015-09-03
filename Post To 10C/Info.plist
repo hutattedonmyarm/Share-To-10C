@@ -31,11 +31,12 @@
 		<key>NSExtensionAttributes</key>
 		<dict>
 			<key>NSExtensionActivationRule</key>
-			<string>TRUEPREDICATE</string>
-			<key>NSExtensionActivationSupportsText</key>
-			<string>2048</string>
-			<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-			<string>2048</string>
+			<dict>
+				<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
+				<string>2048</string>
+				<key>NSExtensionActivationSupportsText</key>
+				<string>2048</string>
+			</dict>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.share-services</string>
