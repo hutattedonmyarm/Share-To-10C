@@ -14,8 +14,11 @@
 @property (weak) IBOutlet NSButton *postButton;
 @property (weak) IBOutlet NSTextField *authorizedLabel;
 
+@property BOOL isADNLogin;
+
 #define kADN_PM_LIMIT 2048
 #define kTEN_C_APPKEY_KEY @"10CAppKey"
+#define kTEN_C_CHAR_LIMIT 6000000
 
 @end
 
@@ -25,6 +28,7 @@ static NSString *tenCAuthTokenKey = @"10CAuthToken";
 static NSString *currentUserKey = @"currentAuthorizedUser";
 static NSString *groupName = @"group.hutattedonmyarm.posttotenc.app";
 static NSString *siteAlphaKey = @"10CsiteAlpha";
+static NSString *isADNLoginKey = @"isADNLogin";
 
 - (NSString *)nibName {
     return @"ShareViewController";
@@ -58,12 +62,15 @@ static NSString *siteAlphaKey = @"10CsiteAlpha";
     } else {
         self.authorizedLabel.stringValue = [NSString stringWithFormat:@"Authorized as %@", [mySharedDefaults stringForKey:currentUserKey]];
         self.authorizedLabel.textColor = [NSColor greenColor];
+        self.isADNLogin = [mySharedDefaults boolForKey:isADNLoginKey];
     }
 }
 
 -(void)textDidChange:(NSNotification *)notification {
-    [self.remainingCharactersLabel setStringValue:[NSString stringWithFormat:@"%lu / %i", self.textView.string.length, kADN_PM_LIMIT]];
-    if (self.textView.string.length > kADN_PM_LIMIT) {
+
+    NSString *labelText = self.isADNLogin ? [NSString stringWithFormat:@"%lu / %i", self.textView.string.length, kADN_PM_LIMIT] : @"";
+    self.remainingCharactersLabel.stringValue = labelText;
+    if (self.isADNLogin && self.textView.string.length > kADN_PM_LIMIT) {
         self.remainingCharactersLabel.textColor = [NSColor redColor];
         self.postButton.enabled = NO;
     } else {
@@ -91,7 +98,7 @@ static NSString *siteAlphaKey = @"10CsiteAlpha";
 }
 - (IBAction)send:(id)sender {
     
-    if (self.textView.string.length > kADN_PM_LIMIT) {
+    if (self.isADNLogin && self.textView.string.length > kADN_PM_LIMIT) {
         NSLog(@"Too long");
     } else {
         NSLog(@"Sending: %@", self.textView.string);

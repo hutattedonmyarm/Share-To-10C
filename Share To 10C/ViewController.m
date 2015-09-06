@@ -22,6 +22,7 @@ static NSString *groupName = @"group.hutattedonmyarm.posttotenc.app";
 static NSString *tenCAuthTokenKey = @"10CAuthToken";
 static NSString *currentUserKey = @"currentAuthorizedUser";
 static NSString *siteAlphaKey = @"10CsiteAlpha";
+static NSString *isADNLoginKey = @"isADNLogin";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -60,6 +61,7 @@ static NSString *siteAlphaKey = @"10CsiteAlpha";
         NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:groupName];
         [defaults setObject:responseDict[@"data"][@"data"][@"AuthToken"] forKey:tenCAuthTokenKey];
         [defaults setObject:responseDict[@"data"][@"data"][@"SiteAlpha"] forKey:siteAlphaKey];
+        [defaults setBool:NO forKey:isADNLoginKey];
         [defaults setObject:self.usernameTextField.stringValue forKey:currentUserKey];
         [defaults synchronize];
         [self setUIToAuthorized];
