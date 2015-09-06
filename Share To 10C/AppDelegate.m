@@ -8,29 +8,26 @@
 
 #import "AppDelegate.h"
 
-@interface AppDelegate ()
+@interface AppDelegate () <NSURLSessionTaskDelegate, NSURLSessionDelegate, NSURLSessionDataDelegate>
+
+
 
 @end
 
 @implementation AppDelegate
 
+static NSString *groupName = @"group.hutattedonmyarm.posttotenc.app";
+static NSString *tenCAuthTokenKey = @"10CAuthToken";
+
 -(void)applicationWillFinishLaunching:(NSNotification *)notification {
     [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self andSelector:@selector(handleAppleEvent:withReplyEvent:) forEventClass:kInternetEventClass andEventID:kAEGetURL];
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    NSUserDefaults *mySharedDefaults = [[NSUserDefaults alloc] initWithSuiteName: @"group.hutattedonmyarm.posttotenc.app"];
-    NSString *authToken = [mySharedDefaults stringForKey:@"authToken"];
-    if (!authToken) {
-        [[NSWorkspace sharedWorkspace] openURL:
-         [NSURL URLWithString:@"https://account.app.net/oauth/authenticate?client_id=LzpEruz978ZHrpdRueMeMzDmUd4hEuyK&response_type=token&redirect_uri=sharetotenc://&scope=messages:net.app.core.pm"]];
-    }
-}
-
+//Handle auth via ADN
 - (void)handleAppleEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
     NSString *urlString = [[event paramDescriptorForKeyword:keyDirectObject] stringValue];
     NSString *token = [urlString componentsSeparatedByString:@"access_token="][1];
-    NSUserDefaults *mySharedDefaults = [[NSUserDefaults alloc] initWithSuiteName: @"group.hutattedonmyarm.posttotenc.app"];
+    NSUserDefaults *mySharedDefaults = [[NSUserDefaults alloc] initWithSuiteName: groupName];
     [mySharedDefaults setObject:token forKey:@"authToken"];
     [mySharedDefaults synchronize];
 }
