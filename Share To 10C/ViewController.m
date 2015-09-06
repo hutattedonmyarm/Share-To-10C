@@ -25,7 +25,6 @@ static NSString *siteAlphaKey = @"10CsiteAlpha";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
     //Check if we have an auth token, set status label accordingly and en-/disable buttons
     NSUserDefaults *mySharedDefaults = [[NSUserDefaults alloc] initWithSuiteName:groupName];
     if ([mySharedDefaults stringForKey:tenCAuthTokenKey] && [[mySharedDefaults stringForKey:tenCAuthTokenKey ] isNotEqualTo:@""]) {
@@ -64,6 +63,14 @@ static NSString *siteAlphaKey = @"10CsiteAlpha";
         [defaults setObject:self.usernameTextField.stringValue forKey:currentUserKey];
         [defaults synchronize];
         [self setUIToAuthorized];
+    } else {
+        NSLog(@"%@", responseDict);
+        NSAlert *alert = [[NSAlert alloc] init];
+        [alert addButtonWithTitle:@"OK"];
+        alert.informativeText = responseDict[@"data"][@"Message"];
+        alert.messageText = @"Error logging in";
+        alert.alertStyle = NSCriticalAlertStyle;
+        [alert runModal];
     }
     if (jsonerror) {
         NSLog(@"Error: %@", jsonerror);
