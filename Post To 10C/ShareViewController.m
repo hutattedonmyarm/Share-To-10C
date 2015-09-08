@@ -13,12 +13,15 @@
 @property (weak) IBOutlet NSTextField *remainingCharactersLabel;
 @property (weak) IBOutlet NSButton *postButton;
 @property (weak) IBOutlet NSTextField *authorizedLabel;
+@property (weak) IBOutlet NSTextField *postTitleTextField;
+@property (weak) IBOutlet NSTextField *tagsTextField;
+@property NSInteger totalLength;
 
 @property BOOL isADNLogin;
 
 #define kADN_PM_LIMIT 2048
 #define kTEN_C_APPKEY_KEY @"10CAppKey"
-#define kTEN_C_CHAR_LIMIT 6000000
+#define kTEN_C_CHAR_LIMIT 10000000
 
 @end
 
@@ -29,14 +32,11 @@ static NSString *currentUserKey = @"currentAuthorizedUser";
 static NSString *groupName = @"group.hutattedonmyarm.posttotenc.app";
 static NSString *siteAlphaKey = @"10CsiteAlpha";
 static NSString *isADNLoginKey = @"isADNLogin";
+static NSString *tenCAppKey = @"10CAppKey";
 
 - (NSString *)nibName {
     return @"ShareViewController";
 }
-
-/***************************************************************************************
- * Warning: Big mess currently due to various attempts at playing with networking code *
- ***************************************************************************************/
 
 - (void)loadView {
     //Auth: https://account.app.net/oauth/authenticate?client_id=LzpEruz978ZHrpdRueMeMzDmUd4hEuyK&response_type=token&scope=messages:net.app.core.pm
@@ -67,10 +67,10 @@ static NSString *isADNLoginKey = @"isADNLogin";
 }
 
 -(void)textDidChange:(NSNotification *)notification {
-
-    NSString *labelText = self.isADNLogin ? [NSString stringWithFormat:@"%lu / %i", self.textView.string.length, kADN_PM_LIMIT] : @"";
+    self.totalLength = self.textView.string.length + self.postTitleTextField.stringValue.length;
+    NSString *labelText = self.isADNLogin ? [NSString stringWithFormat:@"%lu / %i", self.totalLength, kADN_PM_LIMIT] : @"";
     self.remainingCharactersLabel.stringValue = labelText;
-    if (self.isADNLogin && self.textView.string.length > kADN_PM_LIMIT) {
+    if ((self.isADNLogin && self.totalLength > kADN_PM_LIMIT) || (!self.isADNLogin && self.totalLength > kTEN_C_CHAR_LIMIT)) {
         self.remainingCharactersLabel.textColor = [NSColor redColor];
         self.postButton.enabled = NO;
     } else {
@@ -98,10 +98,24 @@ static NSString *isADNLoginKey = @"isADNLogin";
 }
 - (IBAction)send:(id)sender {
     
-    if (self.isADNLogin && self.textView.string.length > kADN_PM_LIMIT) {
-        NSLog(@"Too long");
+    if ((self.isADNLogin && self.totalLength > kADN_PM_LIMIT) || (!self.isADNLogin && self.totalLength > kTEN_C_CHAR_LIMIT)) {
+        NSAlert *tooLongAlert = [[NSAlert alloc] init];
+        [tooLongAlert addButtonWithTitle:@"OK"];
+        tooLongAlert.alertStyle = NSCriticalAlertStyle;
+        tooLongAlert.informativeText = @"Post too long";
+        unsigned long limit = self.isADNLogin ? kADN_PM_LIMIT : kTEN_C_CHAR_LIMIT;
+        tooLongAlert.messageText = [NSString stringWithFormat:@"You are using %lu out of a maximum of %lu characters.", self.totalLength, limit];
     } else {
-        NSLog(@"Sending: %@", self.textView.string);
+        
+        NSURL *postURL = [NSURL URLWithString:@"http://admin.10centuries.com/api/content/post"];
+        NSString *accessKey = [[[NSUserDefaults alloc] initWithSuiteName:groupName] stringForKey:tenCAppKey];
+        NSString *authToken = [[[NSUserDefaults alloc] initWithSuiteName:groupName] stringForKey:tenCAuthTokenKey];
+        NSString *pbody = self.textView.string;
+        NSString *title = self.postTitleTextField.stringValue;
+        NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
+        dateFormat.dateFormat = @"yyyy-MM-dd HH:mm:ss";
+        NSString *dateString = [dateFormat stringFromDate:[NSDate date]];
+        NSString *tags = self.tagsTextField.stringValue;
         NSExtensionItem *inputItem = self.extensionContext.inputItems.firstObject;
         NSExtensionItem *outputItem = [inputItem copy];
         outputItem.attributedContentText = [[NSAttributedString alloc] initWithString:self.textView.string];
