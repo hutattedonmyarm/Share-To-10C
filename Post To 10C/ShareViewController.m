@@ -79,20 +79,13 @@ static NSString *tenCAppKey = @"10CAppKey";
     }
 }
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data {
-    NSLog(@"data!");
-    
+    NSLog(@"%@", [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil]);    
 }
 
--(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didBecomeDownloadTask:(NSURLSessionDownloadTask *)downloadTask {
-    NSLog(@"download");
-}
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))completionHandler {
-    NSLog(@"response: %@", response);
-    
+    completionHandler(NSURLSessionResponseAllow);
 }
--(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didBecomeStreamTask:(NSURLSessionStreamTask *)streamTask {
-    NSLog(@"stream");
-}
+
 -(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error {
     NSLog(@"shit: %@", error);
 }
@@ -116,6 +109,16 @@ static NSString *tenCAppKey = @"10CAppKey";
         dateFormat.dateFormat = @"yyyy-MM-dd HH:mm:ss";
         NSString *dateString = [dateFormat stringFromDate:[NSDate date]];
         NSString *tags = self.tagsTextField.stringValue;
+        
+        NSString *requestbody = [NSString stringWithFormat:@"accessKey=%@&token=%@&title=%@&ptext=%@&ptags=%@&pdate=%@", accessKey, authToken, title, pbody, tags, dateString];
+        NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
+        NSURLSession *session = [NSURLSession sessionWithConfiguration:config delegate:self delegateQueue:nil];
+        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:postURL cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:60.0];
+        request.HTTPBody = [requestbody dataUsingEncoding:NSUTF8StringEncoding];
+        request.HTTPMethod = @"POST";
+        NSURLSessionDataTask *task = [session dataTaskWithRequest:request];
+        [task resume];
+        
         NSExtensionItem *inputItem = self.extensionContext.inputItems.firstObject;
         NSExtensionItem *outputItem = [inputItem copy];
         outputItem.attributedContentText = [[NSAttributedString alloc] initWithString:self.textView.string];
