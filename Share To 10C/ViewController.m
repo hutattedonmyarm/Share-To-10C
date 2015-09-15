@@ -26,6 +26,7 @@ static NSString *isADNLoginKey = @"isADNLogin";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.view.window.titlebarAppearsTransparent = YES;
     //Check if we have an auth token, set status label accordingly and en-/disable buttons
     NSUserDefaults *mySharedDefaults = [[NSUserDefaults alloc] initWithSuiteName:groupName];
     if ([mySharedDefaults stringForKey:tenCAuthTokenKey] && [[mySharedDefaults stringForKey:tenCAuthTokenKey ] isNotEqualTo:@""]) {
