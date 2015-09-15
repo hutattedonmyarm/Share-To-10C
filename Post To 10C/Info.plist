@@ -23,7 +23,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSAppTransportSecurity</key>
@@ -37,10 +37,12 @@
 		<dict>
 			<key>NSExtensionActivationRule</key>
 			<dict>
+				<key>NSExtensionActivationSupportsImageWithMaxCount</key>
+				<integer>1</integer>
 				<key>NSExtensionActivationSupportsText</key>
-				<string>2048</string>
+				<integer>10000000</integer>
 				<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-				<string>2048</string>
+				<integer>10000000</integer>
 			</dict>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>

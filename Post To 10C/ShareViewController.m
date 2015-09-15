@@ -34,6 +34,8 @@ static NSString *siteAlphaKey = @"10CsiteAlpha";
 static NSString *isADNLoginKey = @"isADNLogin";
 static NSString *tenCAppKey = @"10CAppKey";
 
+static NSString *uploadTaskDescription = @"uploadTask";
+
 - (NSString *)nibName {
     return @"ShareViewController";
 }
@@ -44,7 +46,11 @@ static NSString *tenCAppKey = @"10CAppKey";
     // Insert code here to customize the view
     NSExtensionItem *item = self.extensionContext.inputItems.firstObject;
     for (NSItemProvider *att in item.attachments) {
-        if ([att hasItemConformingToTypeIdentifier:@"public.url"]) {
+        if ([att hasItemConformingToTypeIdentifier:@"public.image"]) {
+            [att loadItemForTypeIdentifier:@"public.image" options:kNilOptions completionHandler:^(id item, NSError *error) {
+                [self performSelectorInBackground:@selector(uploadImage:) withObject:item];
+            }];
+        } else if ([att hasItemConformingToTypeIdentifier:@"public.url"]) {
             [att loadItemForTypeIdentifier:@"public.url" options:nil completionHandler:^(NSURL *item, NSError *error) {
                 NSURL *url = item;
                 [self.textView setString:[NSString stringWithFormat:@"[%@](%@)", url.absoluteString, url.absoluteString]];
@@ -63,6 +69,53 @@ static NSString *tenCAppKey = @"10CAppKey";
         self.authorizedLabel.textColor = [NSColor greenColor];
         self.isADNLogin = [mySharedDefaults boolForKey:isADNLoginKey];
     }
+}
+
+-(void)uploadImage:(id)imageData {
+    NSData *imgData = imageData;
+    NSBitmapImageRep *imgrep = [NSBitmapImageRep imageRepWithData:imgData];
+    imgData = [imgrep representationUsingType:NSJPEGFileType properties:@{NSImageCompressionMethod:@1.0}];
+    NSURL *postURL = [NSURL URLWithString:@"http://admin.10centuries.com/uploads.php"];
+    
+    NSString *accessKey = [[[NSUserDefaults alloc] initWithSuiteName:groupName] stringForKey:tenCAppKey];
+    NSString *authToken = [[[NSUserDefaults alloc] initWithSuiteName:groupName] stringForKey:tenCAuthTokenKey];
+    NSString *siteAlpha = [[[NSUserDefaults alloc] initWithSuiteName:groupName] stringForKey:siteAlphaKey];
+    
+    NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:config delegate:self delegateQueue:nil];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:postURL cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:60.0];
+    request.HTTPMethod = @"POST";
+    
+    NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
+    dateFormat.dateFormat = @"yyyy-MM-dd HH:mm:ss";
+    NSString *dateString = [dateFormat stringFromDate:[NSDate date]];
+    NSString *filename = [NSString stringWithFormat:@"%@.jpg", dateString];
+    
+    NSDictionary *params = @{@"accessKey": accessKey, @"token": authToken, @"siteAlpha": siteAlpha, @"location": @"media"};
+    NSString* fileParamConstant = @"sendFile";
+    NSString *boundaryConstant = @"----------V2ymHFg03ehbqgZCaKO6jy";
+    NSString *contentType = [NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundaryConstant];
+    [request setValue:contentType forHTTPHeaderField: @"Content-Type"];
+    
+    NSMutableData *body = [NSMutableData data];
+    
+    for (NSString *p in [params allKeys]) {
+        [body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundaryConstant] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", p] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[[NSString stringWithFormat:@"%@\r\n", [params objectForKey:p]] dataUsingEncoding:NSUTF8StringEncoding]];
+    }
+    
+    [body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundaryConstant] dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", fileParamConstant, filename] dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:[@"Content-Type: image/jpeg\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:imgData];
+    [body appendData:[[NSString stringWithFormat:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding]];
+    [body appendData:[[NSString stringWithFormat:@"--%@--\r\n", boundaryConstant] dataUsingEncoding:NSUTF8StringEncoding]];
+    
+    [request setHTTPBody:body];
+    NSURLSessionDataTask *task = [session dataTaskWithRequest:request];
+    task.taskDescription = uploadTaskDescription;
+    [task resume];
 }
 
 -(void)textDidChange:(NSNotification *)notification {
@@ -88,17 +141,33 @@ static NSString *tenCAppKey = @"10CAppKey";
         alert.alertStyle = NSCriticalAlertStyle;
         [alert runModal];
     }
-    if ([responseDict[@"data"][@"isGood"] isEqualToString:@"N"]) {
-        NSAlert *alert = [[NSAlert alloc] init];
-        [alert addButtonWithTitle:@"OK"];
-        alert.informativeText = @"Error posting";
-        alert.messageText = responseDict[@"data"][@"Message"];
-        alert.alertStyle = NSCriticalAlertStyle;
-        [alert runModal];
+    
+    if ([dataTask.taskDescription isEqualToString:uploadTaskDescription]) {
+        if ([responseDict[@"isGood"] isEqualToString:@"Y"]) {
+            [[self.textView textStorage] appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"![image](%@)", responseDict[@"cdnurl"]]]];
+        } else {
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert addButtonWithTitle:@"OK"];
+            alert.informativeText = @"Error uploading image";
+            alert.messageText = @"Do you have enough free space?";
+            alert.alertStyle = NSCriticalAlertStyle;
+            [alert runModal];
+        }
+    } else {
+        if ([responseDict[@"data"][@"isGood"] isEqualToString:@"N"]) {
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert addButtonWithTitle:@"OK"];
+            alert.informativeText = @"Error posting";
+            alert.messageText = responseDict[@"data"][@"Message"];
+            alert.alertStyle = NSCriticalAlertStyle;
+            [alert runModal];
+        }
     }
 }
 
--(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))completionHandler {
+-(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))
+    completionHandler {
+    NSLog(@"response: %@", response);
     completionHandler(NSURLSessionResponseAllow);
 }
 
@@ -115,7 +184,6 @@ static NSString *tenCAppKey = @"10CAppKey";
         unsigned long limit = self.isADNLogin ? kADN_PM_LIMIT : kTEN_C_CHAR_LIMIT;
         tooLongAlert.messageText = [NSString stringWithFormat:@"You are using %lu out of a maximum of %lu characters.", self.totalLength, limit];
     } else {
-        
         NSURL *postURL = [NSURL URLWithString:@"http://admin.10centuries.com/api/content/post"];
         NSString *accessKey = [[[NSUserDefaults alloc] initWithSuiteName:groupName] stringForKey:tenCAppKey];
         NSString *authToken = [[[NSUserDefaults alloc] initWithSuiteName:groupName] stringForKey:tenCAuthTokenKey];
