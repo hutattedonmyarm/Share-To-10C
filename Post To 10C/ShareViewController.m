@@ -39,7 +39,6 @@ static NSString *tenCAppKey = @"10CAppKey";
 }
 
 - (void)loadView {
-    //Auth: https://account.app.net/oauth/authenticate?client_id=LzpEruz978ZHrpdRueMeMzDmUd4hEuyK&response_type=token&scope=messages:net.app.core.pm
     [super loadView];
     self.textView.delegate = self;
     // Insert code here to customize the view
@@ -79,7 +78,24 @@ static NSString *tenCAppKey = @"10CAppKey";
     }
 }
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data {
-    NSLog(@"%@", [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil]);    
+    NSError *jsonerror = nil;
+    NSDictionary *responseDict = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonerror];
+    if (jsonerror) {
+        NSAlert *alert = [[NSAlert alloc] init];
+        [alert addButtonWithTitle:@"OK"];
+        alert.informativeText = @"Error parsing reponse. Please contact the developer";
+        alert.messageText = jsonerror.description;
+        alert.alertStyle = NSCriticalAlertStyle;
+        [alert runModal];
+    }
+    if ([responseDict[@"data"][@"isGood"] isEqualToString:@"N"]) {
+        NSAlert *alert = [[NSAlert alloc] init];
+        [alert addButtonWithTitle:@"OK"];
+        alert.informativeText = @"Error posting";
+        alert.messageText = responseDict[@"data"][@"Message"];
+        alert.alertStyle = NSCriticalAlertStyle;
+        [alert runModal];
+    }
 }
 
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))completionHandler {
@@ -126,10 +142,6 @@ static NSString *tenCAppKey = @"10CAppKey";
         [self.extensionContext completeRequestReturningItems:outputItems completionHandler:nil];
     }
     
-}
-
--(void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(NSError *)error {
-    NSLog(@"invalid: %@", error);
 }
 
 - (IBAction)cancel:(id)sender {

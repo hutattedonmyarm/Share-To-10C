@@ -54,9 +54,16 @@ static NSString *isADNLoginKey = @"isADNLogin";
 }
 
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data {
-    //TODO: Add error handling, etc etc
-    NSError *jsonerror;
+    NSError *jsonerror = nil;
     NSDictionary *responseDict = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonerror];
+    if (jsonerror) {
+        NSAlert *alert = [[NSAlert alloc] init];
+        [alert addButtonWithTitle:@"OK"];
+        alert.informativeText = @"Error parsing reponse. Please contact the developer";
+        alert.messageText = jsonerror.description;
+        alert.alertStyle = NSCriticalAlertStyle;
+        [alert runModal];
+    }
     if ([responseDict[@"data"][@"isGood"] isEqualToString:@"Y"]) {
         NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:groupName];
         [defaults setObject:responseDict[@"data"][@"data"][@"AuthToken"] forKey:tenCAuthTokenKey];
@@ -69,13 +76,10 @@ static NSString *isADNLoginKey = @"isADNLogin";
         NSLog(@"%@", responseDict);
         NSAlert *alert = [[NSAlert alloc] init];
         [alert addButtonWithTitle:@"OK"];
-        alert.informativeText = responseDict[@"data"][@"Message"];
-        alert.messageText = @"Error logging in";
+        alert.messageText = responseDict[@"data"][@"Message"];
+        alert.informativeText = @"Error logging in";
         alert.alertStyle = NSCriticalAlertStyle;
         [alert runModal];
-    }
-    if (jsonerror) {
-        NSLog(@"Error: %@", jsonerror);
     }
 }
 
