@@ -48,7 +48,15 @@ static NSString *uploadTaskDescription = @"uploadTask";
     for (NSItemProvider *att in item.attachments) {
         if ([att hasItemConformingToTypeIdentifier:@"public.image"]) {
             [att loadItemForTypeIdentifier:@"public.image" options:kNilOptions completionHandler:^(id item, NSError *error) {
-                [self performSelectorInBackground:@selector(uploadImage:) withObject:item];
+                NSData *imgData = nil;
+                if ([item isKindOfClass:[NSImage class]]) {
+                    imgData = [item TIFFRepresentation];
+                    NSBitmapImageRep *imgRep = [NSBitmapImageRep imageRepWithData:imgData];
+                    imgData = [imgRep representationUsingType: NSJPEGFileType properties: @{NSImageCompressionFactor: @1.0}];
+                } else {
+                    imgData = item;
+                }
+                [self performSelectorInBackground:@selector(uploadImage:) withObject:imgData];
             }];
         } else if ([att hasItemConformingToTypeIdentifier:@"public.url"]) {
             [att loadItemForTypeIdentifier:@"public.url" options:nil completionHandler:^(NSURL *item, NSError *error) {
