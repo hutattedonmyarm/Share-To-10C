@@ -20,7 +20,7 @@ static NSString *groupName = @"group.hutattedonmyarm.posttotenc.app";
 static NSString *tenCAuthTokenKey = @"10CAuthToken";
 
 -(void)applicationWillFinishLaunching:(NSNotification *)notification {
-    //self.window.styleMask = self.window.styleMask | NSFullSizeContentViewWindowMask;
+    
     [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self andSelector:@selector(handleAppleEvent:withReplyEvent:) forEventClass:kInternetEventClass andEventID:kAEGetURL];
 }
 

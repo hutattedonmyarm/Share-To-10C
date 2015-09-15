@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50148E111BA8244A00E2C1A9 /* appkey.txt in Resources */ = {isa = PBXBuildFile; fileRef = 50148E101BA8244A00E2C1A9 /* appkey.txt */; };
 		501881BB1B960BE4004EDD09 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 501881BA1B960BE4004EDD09 /* AppDelegate.m */; };
 		501881BE1B960BE4004EDD09 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 501881BD1B960BE4004EDD09 /* main.m */; };
 		501881C11B960BE4004EDD09 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 501881C01B960BE4004EDD09 /* ViewController.m */; };
@@ -59,6 +60,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		50148E101BA8244A00E2C1A9 /* appkey.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = appkey.txt; sourceTree = "<group>"; };
 		501881B61B960BE4004EDD09 /* Share To 10C.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Share To 10C.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		501881B91B960BE4004EDD09 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		501881BA1B960BE4004EDD09 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -144,6 +146,7 @@
 				5094D9101B978D5100639B60 /* Share To 10C.entitlements */,
 				501881B91B960BE4004EDD09 /* AppDelegate.h */,
 				501881BA1B960BE4004EDD09 /* AppDelegate.m */,
+				50148E101BA8244A00E2C1A9 /* appkey.txt */,
 				501881BF1B960BE4004EDD09 /* ViewController.h */,
 				501881C01B960BE4004EDD09 /* ViewController.m */,
 				501881C21B960BE4004EDD09 /* Assets.xcassets */,
@@ -337,6 +340,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				50148E111BA8244A00E2C1A9 /* appkey.txt in Resources */,
 				501881C31B960BE4004EDD09 /* Assets.xcassets in Resources */,
 				501881C61B960BE4004EDD09 /* Main.storyboard in Resources */,
 			);
