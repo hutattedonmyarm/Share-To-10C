@@ -16,6 +16,7 @@
 @property (weak) IBOutlet NSTextField *postTitleTextField;
 @property (weak) IBOutlet NSTextField *tagsTextField;
 @property NSInteger totalLength;
+@property (weak) IBOutlet NSProgressIndicator *fileUploadSpinner;
 
 @property BOOL isADNLogin;
 
@@ -123,6 +124,8 @@ static NSString *uploadTaskDescription = @"uploadTask";
     [request setHTTPBody:body];
     NSURLSessionDataTask *task = [session dataTaskWithRequest:request];
     task.taskDescription = uploadTaskDescription;
+    self.fileUploadSpinner.hidden = false;
+    [self.fileUploadSpinner startAnimation:nil];
     [task resume];
 }
 
@@ -151,6 +154,8 @@ static NSString *uploadTaskDescription = @"uploadTask";
     }
     
     if ([dataTask.taskDescription isEqualToString:uploadTaskDescription]) {
+        [self.fileUploadSpinner stopAnimation:nil];
+        self.fileUploadSpinner.hidden = YES;
         if ([responseDict[@"isGood"] isEqualToString:@"Y"]) {
             [[self.textView textStorage] appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"![image](%@)", responseDict[@"cdnurl"]]]];
         } else {
