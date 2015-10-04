@@ -81,9 +81,20 @@ static NSString *uploadTaskDescription = @"uploadTask";
 }
 
 -(void)uploadImage:(id)imageData {
+    BOOL isPNG = NO;
+    uint8_t c;
+    [imageData getBytes:&c length:1];
+    if (c == 0x89) {
+        isPNG = YES;
+    }
+    
     NSData *imgData = imageData;
     NSBitmapImageRep *imgrep = [NSBitmapImageRep imageRepWithData:imgData];
-    imgData = [imgrep representationUsingType:NSJPEGFileType properties:@{NSImageCompressionMethod:@1.0}];
+    if (isPNG) {
+        imgData = [imgrep representationUsingType:NSPNGFileType properties:@{NSImageCompressionMethod:@1.0}];
+    } else {
+        imgData = [imgrep representationUsingType:NSJPEGFileType properties:@{NSImageCompressionMethod:@1.0}];
+    }
     NSURL *postURL = [NSURL URLWithString:@"http://admin.10centuries.com/uploads.php"];
     
     NSString *accessKey = [[[NSUserDefaults alloc] initWithSuiteName:groupName] stringForKey:tenCAppKey];
@@ -98,7 +109,12 @@ static NSString *uploadTaskDescription = @"uploadTask";
     NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
     dateFormat.dateFormat = @"yyyy-MM-dd HH:mm:ss";
     NSString *dateString = [dateFormat stringFromDate:[NSDate date]];
-    NSString *filename = [NSString stringWithFormat:@"%@.jpg", dateString];
+    NSString *filename = @"";
+    if (isPNG) {
+        filename = [NSString stringWithFormat:@"%@.png", dateString];
+    } else {
+        filename = [NSString stringWithFormat:@"%@.jpg", dateString];
+    }
     
     NSDictionary *params = @{@"accessKey": accessKey, @"token": authToken, @"siteAlpha": siteAlpha, @"location": @"media"};
     NSString* fileParamConstant = @"sendFile";
@@ -141,6 +157,9 @@ static NSString *uploadTaskDescription = @"uploadTask";
         self.postButton.enabled = YES;
     }
 }
+-(void)a {
+    self.textView.string = @"abc";
+}
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data {
     NSError *jsonerror = nil;
     NSDictionary *responseDict = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonerror];
@@ -155,9 +174,10 @@ static NSString *uploadTaskDescription = @"uploadTask";
     
     if ([dataTask.taskDescription isEqualToString:uploadTaskDescription]) {
         [self.fileUploadSpinner stopAnimation:nil];
-        self.fileUploadSpinner.hidden = YES;
+        [self.fileUploadSpinner setHidden:YES];
+        self.fileUploadSpinner.displayedWhenStopped = NO;
         if ([responseDict[@"isGood"] isEqualToString:@"Y"]) {
-            [[self.textView textStorage] appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"![image](%@)", responseDict[@"cdnurl"]]]];
+            [[self.textView textStorage] performSelectorOnMainThread:@selector(appendAttributedString:) withObject:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"![image](%@)", responseDict[@"cdnurl"]]] waitUntilDone:YES];
         } else {
             NSAlert *alert = [[NSAlert alloc] init];
             [alert addButtonWithTitle:@"OK"];
@@ -180,7 +200,6 @@ static NSString *uploadTaskDescription = @"uploadTask";
 
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))
     completionHandler {
-    NSLog(@"response: %@", response);
     completionHandler(NSURLSessionResponseAllow);
 }
 
