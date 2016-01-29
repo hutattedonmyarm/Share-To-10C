@@ -23,6 +23,7 @@
 #define kADN_PM_LIMIT 2048
 #define kTEN_C_APPKEY_KEY @"10CAppKey"
 #define kTEN_C_CHAR_LIMIT 10000000
+#define kTEN_C_IMG_LIMIT 99000000 //99 bytes * 1000 * 1000 => 99MB. The actual limit is 100MB, but let's be safe. We'Re also using 1000 instead of 1024, I know.
 
 @end
 
@@ -87,8 +88,13 @@ static NSString *uploadTaskDescription = @"uploadTask";
     if (c == 0x89) {
         isPNG = YES;
     }
-    
     NSData *imgData = imageData;
+    if (imgData.length > kTEN_C_IMG_LIMIT) {
+        [self displayAlertWithTitle:@"Error uploading image" andMessage:@"The image is too big, try a smaller image (<99MB)"];
+        NSError *cancelError = [NSError errorWithDomain:NSCocoaErrorDomain code:NSUserCancelledError userInfo:nil];
+        [self.extensionContext cancelRequestWithError:cancelError];
+        return;
+    }
     NSBitmapImageRep *imgrep = [NSBitmapImageRep imageRepWithData:imgData];
     if (isPNG) {
         imgData = [imgrep representationUsingType:NSPNGFileType properties:@{NSImageCompressionMethod:@1.0}];
@@ -132,7 +138,11 @@ static NSString *uploadTaskDescription = @"uploadTask";
     
     [body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundaryConstant] dataUsingEncoding:NSUTF8StringEncoding]];
     [body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", fileParamConstant, filename] dataUsingEncoding:NSUTF8StringEncoding]];
-    [body appendData:[@"Content-Type: image/jpeg\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+    if (isPNG) {
+        [body appendData:[@"Content-Type: image/png\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+    } else {
+        [body appendData:[@"Content-Type: image/jpeg\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+    }
     [body appendData:imgData];
     [body appendData:[[NSString stringWithFormat:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding]];
     [body appendData:[[NSString stringWithFormat:@"--%@--\r\n", boundaryConstant] dataUsingEncoding:NSUTF8StringEncoding]];
@@ -140,8 +150,8 @@ static NSString *uploadTaskDescription = @"uploadTask";
     [request setHTTPBody:body];
     NSURLSessionDataTask *task = [session dataTaskWithRequest:request];
     task.taskDescription = uploadTaskDescription;
-    self.fileUploadSpinner.hidden = false;
-    [self.fileUploadSpinner startAnimation:nil];
+    [self.fileUploadSpinner performSelectorOnMainThread:@selector(setHidden:) withObject:NO waitUntilDone:YES];
+    [self.fileUploadSpinner performSelectorOnMainThread:@selector(startAnimation:) withObject:self waitUntilDone:YES];
     [task resume];
 }
 
@@ -157,45 +167,32 @@ static NSString *uploadTaskDescription = @"uploadTask";
         self.postButton.enabled = YES;
     }
 }
--(void)a {
-    self.textView.string = @"abc";
-}
+
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data {
     NSError *jsonerror = nil;
     NSDictionary *responseDict = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonerror];
     if (jsonerror) {
-        NSAlert *alert = [[NSAlert alloc] init];
-        [alert addButtonWithTitle:@"OK"];
-        alert.informativeText = @"Error parsing reponse. Please contact the developer";
-        alert.messageText = jsonerror.description;
-        alert.alertStyle = NSCriticalAlertStyle;
-        [alert runModal];
+        [self displayAlertWithTitle:@"Error parsing reponse. Please contact the developer" andMessage:jsonerror.description];
     }
     
     if ([dataTask.taskDescription isEqualToString:uploadTaskDescription]) {
-        [self.fileUploadSpinner stopAnimation:nil];
-        [self.fileUploadSpinner setHidden:YES];
-        self.fileUploadSpinner.displayedWhenStopped = NO;
+        [self.fileUploadSpinner performSelectorOnMainThread:@selector(stopAnimation:) withObject:self waitUntilDone:YES];
+        [self performSelectorOnMainThread:@selector(hideSpinner) withObject:nil waitUntilDone:YES];
+        [self.fileUploadSpinner performSelectorOnMainThread:@selector(setDisplayedWhenStopped:) withObject:NO waitUntilDone:YES];
         if ([responseDict[@"isGood"] isEqualToString:@"Y"]) {
             [[self.textView textStorage] performSelectorOnMainThread:@selector(appendAttributedString:) withObject:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"![image](%@)", responseDict[@"cdnurl"]]] waitUntilDone:YES];
         } else {
-            NSAlert *alert = [[NSAlert alloc] init];
-            [alert addButtonWithTitle:@"OK"];
-            alert.informativeText = @"Error uploading image";
-            alert.messageText = @"Do you have enough free space?";
-            alert.alertStyle = NSCriticalAlertStyle;
-            [alert runModal];
+            [self displayAlertWithTitle:@"Error uploading image" andMessage:@"Do you have enough free space?"];
         }
     } else {
         if ([responseDict[@"data"][@"isGood"] isEqualToString:@"N"]) {
-            NSAlert *alert = [[NSAlert alloc] init];
-            [alert addButtonWithTitle:@"OK"];
-            alert.informativeText = @"Error posting";
-            alert.messageText = responseDict[@"data"][@"Message"];
-            alert.alertStyle = NSCriticalAlertStyle;
-            [alert runModal];
+            [self displayAlertWithTitle:@"Error posting" andMessage:responseDict[@"data"][@"Message"]];
         }
     }
+}
+
+-(void) hideSpinner {
+    [self.fileUploadSpinner setHidden:YES];
 }
 
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))
@@ -204,7 +201,9 @@ static NSString *uploadTaskDescription = @"uploadTask";
 }
 
 -(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error {
-    NSLog(@"shit: %@", error);
+    if (error) {
+        NSLog(@"shit: %@", error);
+    }
 }
 - (IBAction)send:(id)sender {
     
@@ -247,6 +246,15 @@ static NSString *uploadTaskDescription = @"uploadTask";
 - (IBAction)cancel:(id)sender {
     NSError *cancelError = [NSError errorWithDomain:NSCocoaErrorDomain code:NSUserCancelledError userInfo:nil];
     [self.extensionContext cancelRequestWithError:cancelError];
+}
+
+-(void)displayAlertWithTitle: (NSString *)title andMessage: (NSString *)message {
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert addButtonWithTitle:@"OK"];
+    alert.informativeText = title;
+    alert.messageText = message;
+    alert.alertStyle = NSCriticalAlertStyle;
+    [alert performSelectorOnMainThread:@selector(runModal) withObject:nil waitUntilDone:YES];
 }
 
 @end
