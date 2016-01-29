@@ -8,15 +8,15 @@
 
 #import "ShareViewController.h"
 
-@interface ShareViewController () <NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLSessionTaskDelegate>
+@interface ShareViewController () <NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLSessionTaskDelegate, NSControlTextEditingDelegate>
 @property (unsafe_unretained) IBOutlet NSTextView *textView;
 @property (weak) IBOutlet NSTextField *remainingCharactersLabel;
 @property (weak) IBOutlet NSButton *postButton;
 @property (weak) IBOutlet NSTextField *authorizedLabel;
 @property (weak) IBOutlet NSTextField *postTitleTextField;
-@property (weak) IBOutlet NSTextField *tagsTextField;
 @property NSInteger totalLength;
 @property (weak) IBOutlet NSProgressIndicator *fileUploadSpinner;
+@property (weak) IBOutlet NSTokenField *tagsTokenField;
 
 @property BOOL isADNLogin;
 
@@ -44,6 +44,7 @@ static NSString *uploadTaskDescription = @"uploadTask";
 
 - (void)loadView {
     [super loadView];
+    //self.tagsTextField.delegate = self;
     self.textView.delegate = self;
     // Insert code here to customize the view
     NSExtensionItem *item = self.extensionContext.inputItems.firstObject;
@@ -223,7 +224,8 @@ static NSString *uploadTaskDescription = @"uploadTask";
         NSDateFormatter *dateFormat = [[NSDateFormatter alloc] init];
         dateFormat.dateFormat = @"yyyy-MM-dd HH:mm:ss";
         NSString *dateString = [dateFormat stringFromDate:[NSDate date]];
-        NSString *tags = self.tagsTextField.stringValue;
+        NSString *tags = self.tagsTokenField.stringValue;
+        NSLog(@"%@", tags);
         
         NSString *requestbody = [NSString stringWithFormat:@"accessKey=%@&token=%@&title=%@&ptext=%@&ptags=%@&pdate=%@", accessKey, authToken, title, pbody, tags, dateString];
         NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
