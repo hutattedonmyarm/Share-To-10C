@@ -8,7 +8,7 @@
 
 #import "ShareViewController.h"
 
-@interface ShareViewController () <NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLSessionTaskDelegate, NSControlTextEditingDelegate>
+@interface ShareViewController () <NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLSessionTaskDelegate, NSTokenFieldDelegate>
 @property (unsafe_unretained) IBOutlet NSTextView *textView;
 @property (weak) IBOutlet NSTextField *remainingCharactersLabel;
 @property (weak) IBOutlet NSButton *postButton;
@@ -35,6 +35,7 @@ static NSString *groupName = @"group.hutattedonmyarm.posttotenc.app";
 static NSString *siteAlphaKey = @"10CsiteAlpha";
 static NSString *isADNLoginKey = @"isADNLogin";
 static NSString *tenCAppKey = @"10CAppKey";
+static NSString *tenCTagKey = @"10CTagKey";
 
 static NSString *uploadTaskDescription = @"uploadTask";
 
@@ -44,7 +45,7 @@ static NSString *uploadTaskDescription = @"uploadTask";
 
 - (void)loadView {
     [super loadView];
-    //self.tagsTextField.delegate = self;
+    self.tagsTokenField.delegate = self;
     self.textView.delegate = self;
     // Insert code here to customize the view
     NSExtensionItem *item = self.extensionContext.inputItems.firstObject;
@@ -225,7 +226,16 @@ static NSString *uploadTaskDescription = @"uploadTask";
         dateFormat.dateFormat = @"yyyy-MM-dd HH:mm:ss";
         NSString *dateString = [dateFormat stringFromDate:[NSDate date]];
         NSString *tags = self.tagsTokenField.stringValue;
-        NSLog(@"%@", tags);
+        
+        //Save the new tags for completion
+        NSArray *tokenArray = (NSArray *)self.tagsTokenField.objectValue;
+        if (tokenArray) {
+            NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+            NSMutableSet *newTagsSet = [[NSSet setWithArray:tokenArray] mutableCopy]; //Set to avoid duplicates
+            [newTagsSet addObjectsFromArray:[prefs arrayForKey:tenCTagKey]];
+            [prefs setObject:[newTagsSet allObjects] forKey:tenCTagKey];
+            [prefs synchronize];
+        }
         
         NSString *requestbody = [NSString stringWithFormat:@"accessKey=%@&token=%@&title=%@&ptext=%@&ptags=%@&pdate=%@", accessKey, authToken, title, pbody, tags, dateString];
         NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
@@ -257,6 +267,20 @@ static NSString *uploadTaskDescription = @"uploadTask";
     alert.messageText = message;
     alert.alertStyle = NSCriticalAlertStyle;
     [alert performSelectorOnMainThread:@selector(runModal) withObject:nil waitUntilDone:YES];
+}
+
+-(NSArray *)tokenField:(NSTokenField *)tokenField completionsForSubstring:(NSString *)substring indexOfToken:(NSInteger)tokenIndex indexOfSelectedItem:(NSInteger *)selectedIndex {
+    NSArray *usedTags = [[NSUserDefaults standardUserDefaults] arrayForKey:tenCTagKey];
+    if (!usedTags) {
+        return @[]; //No tags used in the past, we can return an empty array
+    }
+    NSMutableArray *suggestions = [@[] mutableCopy];
+    for (NSString *tag in usedTags) {
+        if ([tag containsString:substring]) {
+            [suggestions addObject:tag];
+        }
+    }
+    return suggestions;
 }
 
 @end
