@@ -17,6 +17,10 @@
 @property NSInteger totalLength;
 @property (weak) IBOutlet NSTokenField *tagsTokenField;
 @property (weak) IBOutlet NSProgressIndicator *uploadProgressBar;
+@property uint64_t totalImageSize;
+@property uint64_t totalBytesSent;
+@property int numberOfImages;
+@property int numberOfImagesComplete;
 
 @property BOOL isADNLogin;
 
@@ -47,6 +51,10 @@ static NSString *uploadTaskDescription = @"uploadTask";
     [super loadView];
     self.tagsTokenField.delegate = self;
     self.textView.delegate = self;
+    self.totalImageSize = 0;
+    self.totalBytesSent = 0;
+    self.numberOfImages = 0;
+    self.numberOfImagesComplete = 0;
     NSExtensionItem *item = self.extensionContext.inputItems.firstObject;
     NSString *t = item.attributedTitle.string;
     if (t) {
@@ -104,6 +112,8 @@ static NSString *uploadTaskDescription = @"uploadTask";
         [self.extensionContext cancelRequestWithError:cancelError];
         return;
     }
+
+    self.numberOfImages++;
     NSBitmapImageRep *imgrep = [NSBitmapImageRep imageRepWithData:imgData];
     if (isPNG) {
         imgData = [imgrep representationUsingType:NSPNGFileType properties:@{NSImageCompressionMethod:@1.0}];
@@ -159,14 +169,9 @@ static NSString *uploadTaskDescription = @"uploadTask";
     [request setHTTPBody:body];
     NSURLSessionDataTask *task = [session dataTaskWithRequest:request];
     task.taskDescription = uploadTaskDescription;
-    //Reset progress bar
-    [self.uploadProgressBar performSelectorOnMainThread:@selector(setHidden:) withObject:NO waitUntilDone:YES];
-    [self performSelectorOnMainThread:@selector(setProgressValue:) withObject:[NSNumber numberWithDouble:0.0] waitUntilDone:YES];
     [task resume];
-}
-
--(void)setProgressValue: (NSNumber *)progress {
-    [self.uploadProgressBar setDoubleValue:[progress doubleValue]];
+    self.totalImageSize += request.HTTPBody.length;
+    
 }
 
 -(void)hideProgressBar {
@@ -194,9 +199,12 @@ static NSString *uploadTaskDescription = @"uploadTask";
     }
     
     if ([dataTask.taskDescription isEqualToString:uploadTaskDescription]) {
-        [self performSelectorOnMainThread:@selector(hideProgressBar) withObject:nil waitUntilDone:YES];
+        self.numberOfImagesComplete++;
+        if (self.numberOfImagesComplete == self.numberOfImages) {
+            [self performSelectorOnMainThread:@selector(hideProgressBar) withObject:nil waitUntilDone:YES];
+        }
         if ([responseDict[@"isGood"] isEqualToString:@"Y"]) {
-            [[self.textView textStorage] performSelectorOnMainThread:@selector(appendAttributedString:) withObject:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"![image](%@)", responseDict[@"cdnurl"]]] waitUntilDone:YES];
+            [[self.textView textStorage] performSelectorOnMainThread:@selector(appendAttributedString:) withObject:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"![image](%@)\n", responseDict[@"cdnurl"]]] waitUntilDone:YES];
         } else {
             [self displayAlertWithTitle:@"Error uploading image" andMessage:@"Do you have enough free space?"];
         }
@@ -266,8 +274,8 @@ static NSString *uploadTaskDescription = @"uploadTask";
 }
 -(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didSendBodyData:(int64_t)bytesSent totalBytesSent:(int64_t)totalBytesSent totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.uploadProgressBar.doubleValue = (double)totalBytesSent /
-        (double)totalBytesExpectedToSend * 100;
+        self.totalBytesSent += bytesSent;
+        self.uploadProgressBar.doubleValue = ((double)self.totalBytesSent / self.totalImageSize * 100);
     });
 }
 

@@ -38,7 +38,7 @@
 			<key>NSExtensionActivationRule</key>
 			<dict>
 				<key>NSExtensionActivationSupportsImageWithMaxCount</key>
-				<integer>1</integer>
+				<integer>10</integer>
 				<key>NSExtensionActivationSupportsText</key>
 				<integer>10000000</integer>
 				<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
