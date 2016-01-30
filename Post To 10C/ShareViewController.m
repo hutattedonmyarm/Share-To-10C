@@ -47,9 +47,17 @@ static NSString *uploadTaskDescription = @"uploadTask";
     [super loadView];
     self.tagsTokenField.delegate = self;
     self.textView.delegate = self;
-    // Insert code here to customize the view
     NSExtensionItem *item = self.extensionContext.inputItems.firstObject;
+    NSString *t = item.attributedTitle.string;
+    if (t) {
+        [self.postTitleTextField setStringValue:[self.postTitleTextField.stringValue stringByAppendingString:t]];
+    }
+    NSString *c = item.attributedContentText.string;
+    if (c) {
+        [[self.textView textStorage] performSelectorOnMainThread:@selector(appendAttributedString:) withObject:[[NSAttributedString alloc] initWithString:c] waitUntilDone:YES];
+    }
     for (NSItemProvider *att in item.attachments) {
+        NSLog(@"%@", att);
         if ([att hasItemConformingToTypeIdentifier:@"public.image"]) {
             [att loadItemForTypeIdentifier:@"public.image" options:kNilOptions completionHandler:^(id item, NSError *error) {
                 NSData *imgData = nil;
