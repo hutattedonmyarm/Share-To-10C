@@ -15,8 +15,8 @@
 @property (weak) IBOutlet NSTextField *authorizedLabel;
 @property (weak) IBOutlet NSTextField *postTitleTextField;
 @property NSInteger totalLength;
-@property (weak) IBOutlet NSProgressIndicator *fileUploadSpinner;
 @property (weak) IBOutlet NSTokenField *tagsTokenField;
+@property (weak) IBOutlet NSProgressIndicator *uploadProgressBar;
 
 @property BOOL isADNLogin;
 
@@ -57,7 +57,6 @@ static NSString *uploadTaskDescription = @"uploadTask";
         [[self.textView textStorage] performSelectorOnMainThread:@selector(appendAttributedString:) withObject:[[NSAttributedString alloc] initWithString:c] waitUntilDone:YES];
     }
     for (NSItemProvider *att in item.attachments) {
-        NSLog(@"%@", att);
         if ([att hasItemConformingToTypeIdentifier:@"public.image"]) {
             [att loadItemForTypeIdentifier:@"public.image" options:kNilOptions completionHandler:^(id item, NSError *error) {
                 NSData *imgData = nil;
@@ -160,9 +159,18 @@ static NSString *uploadTaskDescription = @"uploadTask";
     [request setHTTPBody:body];
     NSURLSessionDataTask *task = [session dataTaskWithRequest:request];
     task.taskDescription = uploadTaskDescription;
-    [self.fileUploadSpinner performSelectorOnMainThread:@selector(setHidden:) withObject:NO waitUntilDone:YES];
-    [self.fileUploadSpinner performSelectorOnMainThread:@selector(startAnimation:) withObject:self waitUntilDone:YES];
+    //Reset progress bar
+    [self.uploadProgressBar performSelectorOnMainThread:@selector(setHidden:) withObject:NO waitUntilDone:YES];
+    [self performSelectorOnMainThread:@selector(setProgressValue:) withObject:[NSNumber numberWithDouble:0.0] waitUntilDone:YES];
     [task resume];
+}
+
+-(void)setProgressValue: (NSNumber *)progress {
+    [self.uploadProgressBar setDoubleValue:[progress doubleValue]];
+}
+
+-(void)hideProgressBar {
+    self.uploadProgressBar.hidden = YES;
 }
 
 -(void)textDidChange:(NSNotification *)notification {
@@ -186,9 +194,7 @@ static NSString *uploadTaskDescription = @"uploadTask";
     }
     
     if ([dataTask.taskDescription isEqualToString:uploadTaskDescription]) {
-        [self.fileUploadSpinner performSelectorOnMainThread:@selector(stopAnimation:) withObject:self waitUntilDone:YES];
-        [self performSelectorOnMainThread:@selector(hideSpinner) withObject:nil waitUntilDone:YES];
-        [self.fileUploadSpinner performSelectorOnMainThread:@selector(setDisplayedWhenStopped:) withObject:NO waitUntilDone:YES];
+        [self performSelectorOnMainThread:@selector(hideProgressBar) withObject:nil waitUntilDone:YES];
         if ([responseDict[@"isGood"] isEqualToString:@"Y"]) {
             [[self.textView textStorage] performSelectorOnMainThread:@selector(appendAttributedString:) withObject:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"![image](%@)", responseDict[@"cdnurl"]]] waitUntilDone:YES];
         } else {
@@ -199,10 +205,6 @@ static NSString *uploadTaskDescription = @"uploadTask";
             [self displayAlertWithTitle:@"Error posting" andMessage:responseDict[@"data"][@"Message"]];
         }
     }
-}
-
--(void) hideSpinner {
-    [self.fileUploadSpinner setHidden:YES];
 }
 
 -(void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))
@@ -261,6 +263,12 @@ static NSString *uploadTaskDescription = @"uploadTask";
         [self.extensionContext completeRequestReturningItems:outputItems completionHandler:nil];
     }
     
+}
+-(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didSendBodyData:(int64_t)bytesSent totalBytesSent:(int64_t)totalBytesSent totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.uploadProgressBar.doubleValue = (double)totalBytesSent /
+        (double)totalBytesExpectedToSend * 100;
+    });
 }
 
 - (IBAction)cancel:(id)sender {
